@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>MediaCapture and Streams API</title>
+    <meta name="viewport" content="width=device-width">
+   <!-- <link rel="stylesheet" href="main.css">  -->
+</head>
+<body>
+    <header>
+        <h1>MediaCapture, MediaRecorder and Streams API</h1>
+    </header>
+    <main>
+        <p></p>
+        
+        <p><button id="btnStart">START RECORDING</button><br/>
+        <button id="btnStop">STOP RECORDING</button></p>
+        
+        <audio controls></audio>
+        
+        <audio id="vid2" controls></audio> </br>
+		<a  id="download">Download</a>
+        <div id="uploadLink"></div>
+        <!-- could save to canvas and do image manipulation and saving too -->
+    </main>    
+    <script>
+	    let uploadLink = document.getElementById('uploadLink');
+        const downloadLink = document.getElementById('download');
+        let constraintObj = { 
+            audio: true, 
+            video: false
+        }; 
+        // width: 1280, height: 720  -- preference only
+        // facingMode: {exact: "user"}
+        // facingMode: "environment"
+        
+        //handle older browsers that might implement getUserMedia in some way
+        if (navigator.mediaDevices === undefined) {
+            navigator.mediaDevices = {};
+            navigator.mediaDevices.getUserMedia = function(constraintObj) {
+                let getUserMedia = navigator.webkitGetUserMedia || navigator.mozGetUserMedia;
+                if (!getUserMedia) {
+                    return Promise.reject(new Error('getUserMedia is not implemented in this browser'));
+                }
+                return new Promise(function(resolve, reject) {
+                    getUserMedia.call(navigator, constraintObj, resolve, reject);
+                });
+            }
+        }else{
+            navigator.mediaDevices.enumerateDevices()
+            .then(devices => {
+                devices.forEach(device=>{
+                    console.log(device.kind.toUpperCase(), device.label);
+                    //, device.deviceId
+                })
+            })
+            .catch(err=>{
+                console.log(err.name, err.message);
+            })
+        }
+
+        navigator.mediaDevices.getUserMedia(constraintObj)
+        .then(function(mediaStreamObj) {
+            //connect the media stream to the first video element
+            let audio = document.querySelector('audio');
+            if ("srcObject" in audio) {
+                audio.srcObject = mediaStreamObj;
+            } else {
+                //old version
+                audio.src = window.URL.createObjectURL(mediaStreamObj);
+            }
+            
+            audio.onloadedmetadata = function(ev) {
+                //show in the video element what is being captured by the webcam
+                audio.play();
+            };
+            
+            //add listeners for saving video/audio
+            let start = document.getElementById('btnStart');
+            let stop = document.getElementById('btnStop');
+            let vidSave = document.getElementById('vid2');
+            let mediaRecorder = new MediaRecorder(mediaStreamObj);
+            let chunks = [];
+            
+            start.addEventListener('click', (ev)=>{
+                mediaRecorder.start();
+                console.log(mediaRecorder.state);
+            })
+            stop.addEventListener('click', (ev)=>{
+                mediaRecorder.stop();
+                console.log(mediaRecorder.state);
+            });
+            mediaRecorder.ondataavailable = function(ev) {
+                chunks.push(ev.data);
+            }
+            mediaRecorder.onstop = (ev)=>{
+                let blob = new Blob(chunks, { 'type' : 'audio/wav;' });
+                chunks = [];
+                let audioURL = window.URL.createObjectURL(blob);
+                vidSave.src = audioURL;
+				downloadLink.href = URL.createObjectURL(blob);
+				downloadLink.download = 'acetest';
+				
+				
+				
+				var filename = new Date().toISOString();
+				//filename to send to server without extension 
+				//upload link 
+				var upload = document.createElement('a');
+				upload.href = "#";
+				upload.innerHTML = "Upload";
+				upload.addEventListener("click", function(event) {
+					var xhr = new XMLHttpRequest();
+					xhr.onload = function(e) {
+						if (this.readyState === 4) {
+							console.log("Server returned: ", e.target.responseText);
+						}
+					};
+					var fd = new FormData();
+					fd.append("audio_data", blob, filename);
+					xhr.open("GET", "/record", true);
+					xhr.send(fd);
+				})
+				uploadLink.appendChild(document.createTextNode(" ")) //add a space in between 
+				uploadLink.appendChild(upload) //add the upload link to li
+
+				
+				
+				
+            }
+        })
+        .catch(function(err) { 
+            console.log(err.name, err.message); 
+        });
+        
+        /*********************************
+        getUserMedia returns a Promise
+        resolve - returns a MediaStream Object
+        reject returns one of the following errors
+        AbortError - generic unknown cause
+        NotAllowedError (SecurityError) - user rejected permissions
+        NotFoundError - missing media track
+        NotReadableError - user permissions given but hardware/OS error
+        OverconstrainedError - constraint video settings preventing
+        TypeError - audio: false, video: false
+        *********************************/
+    </script>
+</body>
+</html>
