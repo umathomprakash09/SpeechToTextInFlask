@@ -3,37 +3,41 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<meta name="HandheldFriendly" content="true">
     <title>Dictionary app</title>
     <link rel="stylesheet" href="{{ url_for('static',filename='styles/style.css') }}">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">
 </head>
 
 <body>
     <nav>
-        <div class="container">
+        <div class="col-sm-12">
             <h1>Dictionary</h1>
         </div>
     </nav>
-
-    <section class="input container">
-        <h2>Find any word exist in the world :)</h2>
-        <div class="form__wrap">
-            <div class="input__wrap">
-                {{mean}}
-                <input type="text" placeholder="Type a word" id="input" value="{{ mean }}">
-                
-                <button id="search">Search</button> </br>
+    <div class="col-sm-12">
+        <section>
+            <h2>Find any word exist in the world :)</h2>
+            <div class="form__wrap">
+                <div class="input__wrap">
+                    {{mean}}
+                    <input type="text" placeholder="Type a word" id="input" value="{{ mean }}">
+                    
+                    <button id="search">Search</button> </br>
+                    
+                </div>
                 
             </div>
-            
-        </div>
-        <div >
-            <input type="hidden"  id="input1">
-            
-            <input type="hidden"  id="input2">
-        </div>
-    </section>
+            <div >
+                <input type="hidden"  id="input1">
+                
+                <input type="hidden"  id="input2">
+            </div>
+        </section>
+    </div>
    <section class="words_Meaning">
       
 
